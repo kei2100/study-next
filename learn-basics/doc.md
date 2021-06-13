@@ -138,3 +138,96 @@ Assets, Metadata, and CSS
 =
 
 https://nextjs.org/learn/basics/assets-metadata-css
+
+### What You’ll Learn in This Lesson
+
+* How to add static files (images, etc) to Next.js.
+* How to customize what goes inside the <head> for each page.
+* How to create a reusable React component which is styled using CSS Modules.
+* How to add global CSS in `pages/_app.js`.
+* Some useful tips for styling in Next.js.
+
+Assets
+==
+
+Next.js では、静的ファイルをトップレベルの `public` ディレクトリに配置することで、asset を配信することができる。
+`public` ディレクトリに配置するファイルは、静的ファイルの他、`robots.txt` や Google Site Verification などの静的アセット
+を配置するのにも適している。
+
+### Unoptimized Image
+
+通常、HTML では以下のようにしてイメージファイルを表示することができる。
+
+```html
+<img src="/images/profile.jpg" alt="Your Name" />
+```
+
+しかし、この場合以下のような事柄は手動で対応する必要がある。
+
+* イメージのレスポンシブ対応
+* サードパーティライブラリによる画像最適化
+* ビューポートに入ったときにだけイメージをロードする
+
+Next.js では、`Image` コンポーネントを使用することでこれらのサポートを受けることができる。
+
+### Image Component and Image Optimization
+
+`next/image` は、HTML の `<img>` 拡張したもので、現代のウェブのために進化したもの。
+
+Next.js はデフォルトで画像最適化をサポートする。
+ブラウザがサポートしている場合、WebPなどの最新フォーマットで画像をリサイズ、最適化して提供することができる。
+これにより、ビューポートが小さいデバイスに大きな画像を配信することがなくなる。
+また、Next.jsは将来の画像フォーマットを自動的に採用し、それらのフォーマットをサポートするブラウザに提供することができる。
+
+自動画像最適化はどんな画像ソースにも対応しており、画像がCMSなどの外部データソースでホストされていても最適化することができる。
+
+### Using the Image Component
+
+Next.js は、ビルド時に画像を最適化するのではなく、ユーザーリクエストに応じてオンデマンドで画像を最適化する。
+そのため static site generator や静的ファイルのみのサイトと異なり、画像枚数が大量になるにつれてビルド時間が長くなることはない。
+
+画像はデフォルトで遅延ロードされるので、ビューポートの外側にある画像に対して、
+ページスピードが影響を受けることはない。画像は、ビューポートにスクロールされたタイミングでロードされる。
+
+画像は、Google が検索ランキングで使用する Core Web Vitals の一つである Cumulative Layout Shift を回避するようにレンダリングされる。
+
+以下は Image コンポーネントを使用した例。height と width はソース画像のアスペクト比で希望のレンダリングサイズを指定する必要がある。
+
+```jsx
+import Image from 'next/image'
+
+const YourComponent = () => (
+  <Image
+    src="/images/profile.jpg" // Route of the image file
+    height={144} // Desired size with correct aspect ratio
+    width={144} // Desired size with correct aspect ratio
+    alt="Your Name"
+  />
+)
+```
+
+Metadata
+==
+
+ページの metadata、例えば `<title>` タグのようなものを変更したいとき、
+Next.js では Head コンポーネントを使うことでそれを実現する。
+
+```jsx
+import Head from 'next/head'
+
+export default function FirstPost() {
+  return (
+          <>
+            <Head>
+              <title>First Post</title>
+            </Head>
+            <h1>First Post</h1>
+            <h2>
+              <Link href="/">
+                <a>Back to home</a>
+              </Link>
+            </h2>
+          </>
+  )
+}
+```
