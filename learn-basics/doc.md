@@ -233,4 +233,102 @@ export default function FirstPost() {
 CSS Styling
 ==
 
-TODO
+Next.jsは `styled-jsx` というCSS-in-JSライブラリをビルトインでサポートしている
+
+```jsx
+<style jsx>{`
+  .container {
+    min-height: 100vh;
+    padding: 0 0.5rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+  }
+  main {
+     padding: 5rem 0;
+     flex: 1;
+     display: flex;
+     flex-direction: column;
+     justify-content: center;
+     align-items: center;
+   }
+
+  .... 
+  
+`}</style>
+```
+
+`styled-jsx` はReactコンポーネントの中で、そのコンポーネント内でのみ有効なCSSを記述できる。
+
+`styled-components` や `emotion` のような他のCSS-in−JSライブラリも使うことができる。
+
+### Writing and Importing CSS
+
+Next.jsにはCSSとSassのサポートが組み込まれており、
+.cssファイルと.scssファイルをインポートできる。
+TailwindCSSなどの一般的なCSSライブラリの使用もサポートされている。
+
+Layout Component
+==
+
+Next.jsにビルトインサポートされているCSS Modulesを使って `Layout` コンポーネントを定義していく
+
+```tsx
+// components/layout.js
+
+import styles from './layout.module.css'
+
+export default function Layout({ children }) {
+  return <div className={styles.container}>{children}</div>
+}
+```
+
+```css
+/* components/layout.modules.css */
+/* Important: To use CSS Modules, the CSS file name must end with .module.css. */
+
+.container {
+  max-width: 36rem;
+  padding: 0 1rem;
+  margin: 3rem auto 6rem;
+}
+```
+
+```tsx
+// pages/posts/first-post.js
+
+import Head from 'next/head'
+import Link from 'next/link'
+import Layout from '../../components/layout'
+
+export default function FirstPost() {
+  return (
+    <Layout> {/* Layoutコンポーネントを利用  */}
+      <Head>
+        <title>First Post</title>
+      </Head>
+      <h1>First Post</h1>
+      <h2>
+        <Link href="/">
+          <a>Back to home</a>
+        </Link>
+      </h2>
+    </Layout>
+  )
+}
+```
+
+### Automatically Generates Unique Class Names
+
+Devtoolなどで確認すると、上記 `Layout` コンポーネントのclass名には、
+`layout_container__...:` のような自動生成されたclass名が設定されている。
+
+これはCSS Modulesにより自動的に生成されたclass名であり、これによりクラス名の衝突を紀にする必要がなくなる。
+
+さらにNext.jsは、CSS Modulesについても自動コード分割を行うことができ、
+ページごとに最小限のCSSが読み込まれることによりバンドルサイズが小さくなる。
+
+CSSモジュールはビルド時にJavaScriptバンドルから抽出され、
+Next.jsによって自動的にロードされる.cssファイルを生成する。
+
