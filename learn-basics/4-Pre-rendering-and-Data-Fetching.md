@@ -89,6 +89,106 @@ export async function getStaticProps() {
 
 NOTE: 開発モードではリクエストごとにgetStaticPropsの呼び出しが実行される
 
-### Blog Data
+### getStaticProps Details
 
-TODO https://nextjs.org/learn/basics/data-fetching/blog-data
+getStaticPropsは必ずサーバーサイドで実行されるため、外部APIを使用したデータフェッチはもとより、
+Next.jsアプリケーションサーバーからDBアクセスして取得したデータなども利用することができる。
+
+```jsx
+export async function getSortedPostsData() {
+  // Instead of the file system,
+  // fetch post data from an external API endpoint
+  const res = await fetch('..')
+  return res.json()
+}
+```
+
+※ fetch APIはNext.jsによりポリフィルされ、クライアントサイドでもサーバーサイドでも同様に呼び出すことができる。
+
+```jsx
+import someDatabaseSDK from 'someDatabaseSDK'
+
+const databaseClient = someDatabaseSDK.createClient(...)
+
+export async function getSortedPostsData() {
+  // Instead of the file system,
+  // fetch post data from a database
+  return databaseClient.query('SELECT posts...')
+}
+```
+
+### Development vs. Production
+
+* development modeでは、getStaticPropsの呼び出しはリクエストごとに実行される（Server-side Renderingの挙動）
+* production modeでは、ビルド時に実行される。しかしこの挙動は `getStaticPaths` 関数を実装し、そこから `fallback key` を
+返却することで拡張することができる
+  
+どちらのモードでも最終的にproductionではビルド時に実行することを想定しているため、
+リクエストヘッダーやクエリパラメータなどリクエスト時にのみ利用可能なデータを使うことはできない。
+
+### Only Allowed in a Page
+
+getStaticPropsは `page` ファイルからのみエクスポートすることができる。
+理由の1つは、ページがレンダリングされる前にReactが必要なすべてのデータを持っている必要があるため。
+
+### What If I Need to Fetch Data at Request Time?
+
+ユーザーのリクエストが届かないうちは必要なデータが揃わず、プリレンダリングできないといった場合、
+Static Generationは良い選択ではない。
+
+このような場合はServer-side Renderingを選択するか、プリレンダリング自体を行わない選択をする。
+
+### Using `getServerSideProps`
+
+Server-side Renderingを行うには、getStaticPropsの代わりに `getServerSideProps` を `page` に実装する。
+
+```jsx
+export async function getServerSideProps(context) {
+  return {
+    props: {
+      // props for your component
+    }
+  }
+}
+```
+
+getServerSidePropsはリクエストごとに呼び出され、 contextパラメータにリクエスト由来のパラメータが設定される。
+
+getServerSidePropsは、リクエスト時にデータを取得しなければならないページを事前にレンダリングする必要がある場合にのみ
+使用する。TTFB（Time to First Byte）はgetStaticPropsよりも遅くなる、なぜなら 、
+サーバーはリクエストごとに結果を計算しなければならず、追加設定なしにCDNで結果をキャッシュすることはできないため。
+
+### Client-side Rendering
+
+Client-side Renderingは以下のような流れで実行される
+
+* 外部データを必要としないページの部分をプリレンダリングしておく
+* ページが読み込まれたらJavaScriptを使用して必要なデータをフェッチし、残りの部分の処理を行う。
+
+Client-side Renderingは、ユーザーのダッシュボードページなどプライベートでユーザー固有なデータを表示する場合に選択する
+
+### SWR
+
+Next.js開発チームは、外部データフェッチ用のReactHookライブラリ `SWR` を提供している。
+
+クライアントサイドでデータを取得している場合は、SWRが強く勧められている。
+SWRは、キャッシング、再検証、フォーカストラッキング、インターバルでの再取得などの機能を備える。
+
+https://swr.vercel.app/ja
+
+> “SWR” という名前は、 HTTP RFC 5861 で提唱された HTTP キャッシュ無効化戦略である stale-while-revalidate に由来しています。 SWR は、まずキャッシュからデータを返し（stale）、次にフェッチリクエストを送り（revalidate）、最後に最新のデータを持ってくるという戦略です。
+
+> SWR では、 コンポーネントはデータの更新を継続的かつ自動的に受け取ることができます。
+そして、 UI は常に高速でリアクティブなモノになります。
+
+```jsx
+import useSWR from 'swr'
+
+function Profile() {
+  const { data, error } = useSWR('/api/user', fetcher)
+
+  if (error) return <div>failed to load</div>
+  if (!data) return <div>loading...</div>
+  return <div>hello {data.name}!</div>
+}
+```
