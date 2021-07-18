@@ -20,4 +20,21 @@ Next.js アプリを Vercel にデプロイすると以下のような機能を�
 Other Hosting Options
 ==
 
-https://nextjs.org/learn/basics/deploying-nextjs-app/other-hosting-options
+Next.js アプリは Node.js をサポートする任意のプロバイダにデプロイ可能。
+
+これまで構築した nextjs-blog アプリの package.json には以下のタスクが含まれており、
+
+```json
+{
+  "scripts": {
+    "dev": "next",
+    "build": "next build",
+    "start": "next start"
+  }
+}
+```
+
+`npm run build` すると、production application が `.next` ディレクトリに作成される。
+
+作成後、`npm run start` すると、静的に生成されたページと Server-side レンダリングするページ、API Routes を
+サポートするハイブリッドな Node.js サーバーが起動する
